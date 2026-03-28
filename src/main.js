@@ -2,7 +2,6 @@ import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 
 import { getImagesByQuery } from './js/pixabay-api.js';
-
 import {
   createGallery,
   clearGallery,
@@ -13,21 +12,20 @@ import {
 } from './js/render-functions.js';
 
 const form = document.querySelector('.form');
-const loadMoreBtn = document.querySelector('.load-more-btn'); // Кнопка "Load More"
+const loadMoreBtn = document.querySelector('.load-more-btn');
 
 let query = '';
 let page = 1;
-const perPage = 15; // Має збігатися з тим, що в pixabay-api.js
+const perPage = 15;
 
 form.addEventListener('submit', handleSubmit);
 loadMoreBtn.addEventListener('click', handleLoadMore);
 
-// 1. Обробка сабміту форми
 async function handleSubmit(e) {
   e.preventDefault();
 
   query = e.currentTarget.elements['search-text'].value.trim();
-  page = 1; // Скидаємо сторінку до першої
+  page = 1;
 
   if (query === '') {
     iziToast.warning({ message: 'Please enter a search term' });
@@ -35,7 +33,7 @@ async function handleSubmit(e) {
   }
 
   clearGallery();
-  loadMoreBtn.classList.add('is-hidden'); // Ховаємо кнопку перед новим пошуком
+  hideLoadMoreButton(); // ЗАМІНЕНО: тепер через функцію
   showLoader();
 
   try {
@@ -45,7 +43,7 @@ async function handleSubmit(e) {
       iziToast.error({ message: 'Sorry, no images found.' });
     } else {
       createGallery(data.hits);
-      checkBtnStatus(data.totalHits); // Перевіряємо, чи показувати кнопку
+      checkBtnStatus(data.totalHits);
     }
   } catch (error) {
     iziToast.error({ message: 'Something went wrong!' });
@@ -55,20 +53,17 @@ async function handleSubmit(e) {
   }
 }
 
-// 2. Обробка натискання "Load More"
 async function handleLoadMore() {
   page += 1;
-  showLoader();
-  loadMoreBtn.classList.add('is-hidden'); // Тимчасово ховаємо кнопку
 
-  smoothScroll();
+  hideLoadMoreButton(); // ЗАМІНЕНО: тепер через функцію
+  showLoader();
 
   try {
     const data = await getImagesByQuery(query, page);
     createGallery(data.hits);
 
     smoothScroll();
-
     checkBtnStatus(data.totalHits);
   } catch (error) {
     iziToast.error({ message: 'Error loading more images' });
@@ -77,23 +72,21 @@ async function handleLoadMore() {
   }
 }
 
-// 3. Функція перевірки: чи показувати кнопку "Load More"
 function checkBtnStatus(totalHits) {
   const lastPage = Math.ceil(totalHits / perPage);
 
   if (page >= lastPage) {
-    loadMoreBtn.classList.add('is-hidden');
+    hideLoadMoreButton(); // ЗАМІНЕНО: тепер через функцію
     if (totalHits > 0) {
       iziToast.info({
         message: "We're sorry, but you've reached the end of search results.",
       });
     }
   } else {
-    loadMoreBtn.classList.remove('is-hidden');
+    showLoadMoreButton(); // ЗАМІНЕНО: тепер через функцію
   }
 }
 
-// 4. Функція плавного скролу (опціонально, але корисно)
 function smoothScroll() {
   const galleryItem = document.querySelector('.gallery-item');
   if (galleryItem) {
